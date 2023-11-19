@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Management</title>
+    <style>
+        /* Add your styles here */
+        .product-container {
+            margin-bottom: 10px;
+        }
+        .delete-button {
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Add Product</h2>
+    <label for="sellingPrice">Selling Price:</label>
+    <input type="number" id="sellingPrice">
+
+    <label for="productName">Product Name:</label>
+    <input type="text" id="productName">
+
+    <label for="category">Choose a Category:</label>
+    <select id="category">
+        <option value="food">Food</option>
+        <option value="electronics">Electronics</option>
+        <option value="skincare">Skincare</option>
+    </select>
+
+    <button onclick="addProduct()">Add Product</button>
+
+    <h2>Products</h2>
+    <div id="foodItems" class="category-container">
+        <h3>Food Items:</h3>
+        <div id="foodList" class="product-list"></div>
+    </div>
+
+    <div id="electronicsItems" class="category-container">
+        <h3>Electronic Items:</h3>
+        <div id="electronicsList" class="product-list"></div>
+    </div>
+
+    <div id="skincareItems" class="category-container">
+        <h3>Skincare Items:</h3>
+        <div id="skincareList" class="product-list"></div>
+    </div>
+
+    <script>
+        const apiBaseUrl = "https://crudcrud.com/api/9f4f879aeb6649bc962da965c50036b2/";
+
+        function addProduct() {
+            var sellingPrice = document.getElementById("sellingPrice").value;
+            var productName = document.getElementById("productName").value;
+            var category = document.getElementById("category").value;
+
+            var product = {
+                sellingPrice: sellingPrice,
+                productName: productName,
+                category: category
+            };
+
+            // Assuming productList is an array that stores added products
+            productList[category + "List"].push(product);
+
+            // Clear input fields
+            document.getElementById("sellingPrice").value = "";
+            document.getElementById("productName").value = "";
+
+            // Save to CrudCrud API
+            saveToApi(product, category);
+
+            // Update product list display
+            displayProductList();
+        }
+
+        function deleteProduct(category, index) {
+            // Depending on the category, remove the product from the corresponding list
+            productList[category + "List"].splice(index, 1);
+
+            // Delete from CrudCrud API
+            //deleteFromApi(index, category);
+
+            // Update product list display
+            displayProductList();
+        }
+
+        function saveToApi(product, category) {
+            // Make a POST request to CrudCrud API to save the product
+            fetch(apiBaseUrl + category, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(product),
+            })
+            .then(response => response.json())
+            .then(data => console.log('Product added:', data))
+            .catch(error => console.error('Error adding product:', error));
+        }
+
+        function deleteFromApi(index, category) {
+            // Get the unique ID of the product from the saved list
+            const productId = productList[category + "List"][index]._id;
+
+            // Make a DELETE request to CrudCrud API to delete the product
+            fetch(apiBaseUrl + category + '/' + productId, {
+                method: 'DELETE',
+            })
+            .then(response => response.json())
+            .then(data => console.log('Product deleted:', data))
+            .catch(error => console.error('Error deleting product:', error));
+        }
+
+        function displayProductList() {
+            // Clear existing product lists
+            document.getElementById("foodList").innerHTML = "";
+            document.getElementById("electronicsList").innerHTML = "";
+            document.getElementById("skincareList").innerHTML = "";
+
+            for (var i = 0; i < productList.foodList.length; i++) {
+                var product = productList.foodList[i];
+                var deleteButton = '<button class="delete-button" onclick="deleteProduct(\'food\',' + i + ')">Delete</button>';
+                document.getElementById("foodList").innerHTML += '<div class="product-container">* Product Price: ' + product.sellingPrice + ', Product Name: ' + product.productName + ', Category: ' + product.category + deleteButton + '</div>';
+            }
+
+            for (var i = 0; i < productList.electronicsList.length; i++) {
+                var product = productList.electronicsList[i];
+                var deleteButton = '<button class="delete-button" onclick="deleteProduct(\'electronics\',' + i + ')">Delete</button>';
+                document.getElementById("electronicsList").innerHTML += '<div class="product-container">* Product Price: ' + product.sellingPrice + ', Product Name: ' + product.productName + ', Category: ' + product.category + deleteButton + '</div>';
+            }
+
+            for (var i = 0; i < productList.skincareList.length; i++) {
+                var product = productList.skincareList[i];
+                var deleteButton = '<button class="delete-button" onclick="deleteProduct(\'skincare\',' + i + ')">Delete</button>';
+                document.getElementById("skincareList").innerHTML += '<div class="product-container">* Product Price: ' + product.sellingPrice + ', Product Name: ' + product.productName + ', Category: ' + product.category + deleteButton + '</div>';
+            }
+        }
+
+        // Initial empty product list
+        var productList = {
+            foodList: [],
+            electronicsList: [],
+            skincareList: []
+        };
+
+        // Load data from CrudCrud API on page load
+        function loadDataFromApi(category) {
+            fetch(apiBaseUrl + category)
+                .then(response => response.json())
+                .then(data => {
+                    productList[category + "List"] = data;
+                    displayProductList();
+                })
+                .catch(error => console.error('Error loading data from API:', error));
+        }
+
+        // Display initial product list by loading data from CrudCrud API
+        for (var i = 0; i < categories.length; i++) {
+            loadDataFromApi(categories[i]);
+        }
+    </script>
+</body>
+</html>
